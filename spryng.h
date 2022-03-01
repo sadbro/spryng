@@ -1,6 +1,8 @@
 
-#include <stdio.h>
-#include <stdlib.h>
+#pragma once
+
+#ifndef SPRYNG_H
+#define SPRYNG_H
 
 #define println(fmt, ...)           printf(fmt"\n", ##__VA_ARGS__)
 #define fprintln(stream, fmt, ...)  fprintf(stream, fmt"\n", ##__VA_ARGS__)
@@ -232,3 +234,4 @@ char* lower(char* ss){
     return res;
 }
 
+#endif // SPRYNG_H
