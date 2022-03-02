@@ -1,4 +1,4 @@
 
 # GITIGNORE
 
-*.out
+tests/*.out
