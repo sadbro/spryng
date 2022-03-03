@@ -6,24 +6,14 @@
 
 int main(){
 
-    char delim;
-    char buff[64];
-    char** list;
+    printf("/--abc--def--ghi--jkl/\n");
 
-    printf("Enter delimiter: ");
-    scanf("%c", &delim);
+    char** tk = splits("--abc--def--ghi--jkl", "--");
 
-    printf("\nEnter Script (max size of 64): ");
-    scanf("%s", buff);
+    for (int i=0; i<4; i++){
 
-    println("-------------------------------");
-
-    list = split(buff, delim);
-
-    for (int i=0; i<count(buff, delim) +1; i++){
-
-        println("[%s]", list[i]);
+        println("[%s]", tk[i]);
     }
 
-	return 0;
+    return 0;
 }
