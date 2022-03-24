@@ -241,6 +241,8 @@ char* join(char** list, int len, char* str){
 
 int __compare_prototype(char* a, char* b, int start, int end){
 
+    if (length(b) == 0) {return 1;}
+
     for (int i=start; i<end; i++){
 
         if(a[i] != b[i]){
@@ -319,6 +321,47 @@ char* lower(char* ss){
     }
 
     return res;
+}
+
+int raise10(int pp){
+
+    int res = 1;
+    for (int i=0; i<pp; i++){
+
+        res *= 10;
+    }
+
+    return res;
+}
+
+int c2i(char cc){
+
+    return cc - '0';
+}
+
+int _s2i_positive(char* str){
+
+    int res = 0;
+
+    for (int i=0; i<length(str); i++){
+
+        int util = c2i((char)str[length(str)-i-1]) * raise10(i);
+        res += util;
+    }
+
+    return res;
+}
+
+int s2i(char* str){
+
+    if (*str == '-'){
+
+        return 0- _s2i_positive(str +1);
+    }
+    else {
+
+        return _s2i_positive(str);
+    }
 }
 
 #endif // SPRYNG_H
