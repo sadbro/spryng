@@ -1,5 +1,5 @@
 
 # GITIGNORE
 
-spryng.c
-spryng.out
+*.c
+*.out
