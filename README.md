@@ -16,5 +16,5 @@ count("123-456-789", '-') will return (int) 2.
 split("123-456-789", '-') will return (char**) {"123", "456", "789"}.
 
 char* list[3] = {"123", "456", "789"};
-join(list, "-") will return "123-456-789".
+join(list, 3, "-") will return "123-456-789".
 ```
