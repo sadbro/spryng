@@ -1,4 +1,5 @@
 
 # GITIGNORE
 
-tests/*.out
+spryng.c
+spryng.out

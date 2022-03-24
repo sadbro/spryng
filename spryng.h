@@ -22,6 +22,9 @@
 #define islower(a)                  __is_upper_lower_alpha_prototype(a, 0)
 #define isalpha(a)                  __is_upper_lower_alpha_prototype(a, 2)
 
+#define split(ss, dl)               _split(ss, dl).data
+#define MAX_STRING_CAP              512
+
 #define triml(ss)                   __triml_prototype(ss, 0, ' ')
 #define triml_by_delim(ss, dl)      __triml_prototype(ss, 0, dl)
 
@@ -30,6 +33,13 @@
 
 #define trim(ss)                    trimr(triml(ss))
 #define trim_by_delim(ss, dl)       trimr_by_delim(triml_by_delim(ss, dl), dl)
+
+typedef struct {
+
+    char* data[MAX_STRING_CAP];
+    int count;
+
+} strlst;
 
 int __count_len_prototype(char* ss, char dl, int ret_type){
 
@@ -163,77 +173,40 @@ char* __trimr_prototype(char* ss, int i, char dl){
     else {return __trimr_prototype(ss, i-1, dl);}
 }
 
-char** splits(char* ss, char* dl){
+void _split_prototype(char* ss, char dl, strlst* container){
 
-    int sbss = counts(ss, dl) +1;
-    int* poss = (int*)malloc((sbss +1)*sizeof(int));
-    char** tokens = (char**)malloc(sbss*sizeof(char));
+    if (container->count == MAX_STRING_CAP || eq(ss, "")){return;}
 
-    poss[0] = 0;
-    poss[sbss] = length(ss) -1;
+    ss = trim_by_delim(ss, dl);
 
-    int cc = 1;
-    for (int i=0; i<length(ss)-length(dl)+1; i++){
+    int start = 0, end = 0;
 
-        char* cmp = substr(ss, i, i +length(dl) -1);
-
-        if (eq(dl, cmp)){poss[cc] = i; cc++;}
-
-        free(cmp);
-    }
-
-    //for (int i=0;i < sbss; i++){println("[%d]", poss[i]);}
-
-    int count = 0;
-    for (int i=0; i<sbss; i++){
-
-        if(poss[i] == poss[i +1]){tokens[count] = "";continue;}
-
-        else {
-            if ( i > 0 && i < sbss -1){tokens[count] = substr(ss, poss[i] +length(dl), poss[i+1] -1); /*println("[%d]-%d-%d-", poss[i], poss[i] +length(dl), poss[i+1] -1);*/}
-            else if ( i == 0 ){tokens[count] = substr(ss, poss[i], poss[i+1] -1); /*println("[%d]-%d-%d-", poss[i], poss[i], poss[i+1] -1);*/}
-            else {tokens[count] = substr(ss, poss[i] +length(dl), poss[i+1]); /*println("[%d]-%d-%d-", poss[i], poss[i] +length(dl), poss[i+1]);*/}
-        }
-
-        count++;
-    }
-
-    free(poss);
-    return tokens;
-
-}
-
-char** split(char* ss, char dl){
-
-    int sbss = count(ss, dl) +1;
-    int* poss = (int*)malloc((sbss +1)*sizeof(int));
-    char** tokens = (char**)malloc(sbss*sizeof(char));
-
-    poss[0] = 0;
-    poss[sbss] = length(ss) -1;
-
-    int j = 1;
     for (int i=0; i<length(ss); i++){
 
-        if(ss[i] == dl){
+        if (ss[i] == dl){
 
-            poss[j] = i;
-            j++;
+            break;
         }
+
+        end++;
     }
 
-    int count = 0;
-    for (int i=0; i<sbss; i++){
+    char* first = trim_by_delim(substr(ss, start, end), dl);
+    char* second = substr(ss, end +1, length(ss));
 
-        if ( i > 0 && i < sbss -1){tokens[count] = substr(ss, poss[i] +1, poss[i+1] -1);}
-        else if ( i == 0 ){tokens[count] = substr(ss, poss[i], poss[i+1] -1);}
-        else {tokens[count] = substr(ss, poss[i] +1, poss[i+1]);}
+    container->data[container->count] = first;
+    container->count++;
 
-        count++;
-    }
+    _split_prototype(second, dl, container);
+}
 
-    free(poss);
-    return tokens;
+strlst _split(char* ss, char dl){
+
+    strlst mem = {0};
+
+    _split_prototype(ss, dl, &mem);
+
+    return mem;
 }
 
 char* concat(char* a, char* b){
