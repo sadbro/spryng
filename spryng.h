@@ -413,8 +413,8 @@ char* _i2s_positive(int n){
 
     int ll = length(n);
     char* res = malloc(n*sizeof(ll));
-
     int track = ll -1;
+
     while(ll--){
 
         res[track--] = i2c(n%10);
