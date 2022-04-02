@@ -4,7 +4,6 @@
 #ifndef SPRYNG_H
 #define SPRYNG_H
 
-<<<<<<< HEAD
 int length_i(int a){
 
     int count = 1;
@@ -25,16 +24,11 @@ int length(char* ss){
     return c;
 }
 
-<<<<<<< HEAD
 #define __FUNC__                    __func__
 
 #define assert(x)                   if (!(x)) {fprintf(stderr, "[ERROR] Assertion Failed => Line %d in `%s()` in File `%s`"     \
                                                 , __LINE__, __FUNC__, __FILE__); exit(1);}                                      \
 
-=======
->>>>>>> parent of 46ed347... Added length() macro
-=======
->>>>>>> parent of bb39d65... Added i2s() => `integer_to_string`
 #define println(fmt, ...)           printf(fmt"\n", ##__VA_ARGS__)
 #define fprintln(stream, fmt, ...)  fprintf(stream, fmt"\n", ##__VA_ARGS__)
 
