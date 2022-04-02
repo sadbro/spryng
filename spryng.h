@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <stdlib.h>
+
 #ifndef SPRYNG_H
 #define SPRYNG_H
 
@@ -23,6 +25,11 @@ int length(char* ss){
 
     return c;
 }
+
+#define __FUNC__                    __func__
+
+#define assert(x)                   if (!(x)) {fprintf(stderr, "[ERROR] Assertion Failed => Line %d in `%s()` in File `%s`"     \
+                                                , __LINE__, __FUNC__, __FILE__); exit(1);}                                      \
 
 #define println(fmt, ...)           printf(fmt"\n", ##__VA_ARGS__)
 #define fprintln(stream, fmt, ...)  fprintf(stream, fmt"\n", ##__VA_ARGS__)
@@ -391,6 +398,37 @@ int s2i(char* str){
 
         return _s2i_positive(str);
     }
+}
+
+char i2c(int n){
+
+    assert(length(n) == 1);
+
+    return '0' +n;
+}
+
+char* _i2s_positive(int n){
+
+    assert(n > 0);
+
+    int ll = length(n);
+    char* res = malloc(n*sizeof(ll));
+
+    int track = ll -1;
+    while(ll--){
+
+        res[track--] = i2c(n%10);
+        n /= 10;
+    }
+
+    return res;
+}
+
+char* i2s(int n){
+
+    if (n == 0) {return "0";}
+    else if (n > 0) {return _i2s_positive(n);}
+    else {return concat("-", _i2s_positive(-n));}
 }
 
 #endif // SPRYNG_H
