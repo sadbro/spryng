@@ -32,8 +32,13 @@ int length(char* ss){
 #define println(fmt, ...)           printf(fmt"\n", ##__VA_ARGS__)
 #define fprintln(stream, fmt, ...)  fprintf(stream, fmt"\n", ##__VA_ARGS__)
 
-#define length(ss)                  __count_len_prototype(ss, '\0', 0)
-#define count(ss, delim)            __count_len_prototype(ss, delim, 1)
+#define count(ss, delim)            __count__prototype(ss, delim, 1)
+
+#define length(x)                   _Generic((x),                \
+                                            int    : length_i,   \
+                                            char*  : length,     \
+                                            double : length_i    \
+                                            )(x)
 
 #define in(ss, sbss)                counts(ss, sbss) > 0
 
@@ -47,7 +52,7 @@ int length(char* ss){
 #define islower(a)                  __is_upper_lower_alpha_prototype(a, 0)
 #define isalpha(a)                  __is_upper_lower_alpha_prototype(a, 2)
 
-#define split(ss, dl)               _split(ss, dl).data
+#define split(ss, dl)               raw_split(ss, dl).data
 #define MAX_STRING_CAP              512
 
 #define triml(ss)                   __triml_prototype(ss, 0, ' ')
@@ -66,7 +71,7 @@ typedef struct {
 
 } strlst;
 
-int __count_len_prototype(char* ss, char dl, int ret_type){
+int __count__prototype(char* ss, char dl, int ret_type){
 
     int i = 0, c = 0;
     while(ss[c]){
@@ -225,7 +230,7 @@ void _split_prototype(char* ss, char dl, strlst* container){
     _split_prototype(second, dl, container);
 }
 
-strlst _split(char* ss, char dl){
+strlst raw_split(char* ss, char dl){
 
     strlst mem = {0};
 
@@ -348,18 +353,22 @@ char* lower(char* ss){
     return res;
 }
 
-int raise10(int pp){
+double raise10(int pp){
 
-    int res = 1;
-    for (int i=0; i<pp; i++){
+    double res = 1;
 
-        res *= 10;
-    }
+    if (pp == 0) {return res;}
+
+    else if (pp > 0){for (int i=0; i<pp; i++){res *= 10;}}
+
+    else {for (int i=0; i<-pp; i++){res /= 10;}}
 
     return res;
 }
 
 int c2i(char cc){
+
+    if (cc > '9' || cc < '0') {fprintln(stderr, "ERROR: character out of bounds for integer conversion: `%c`", cc); exit(1);}
 
     return cc - '0';
 }
@@ -370,7 +379,7 @@ int _s2i_positive(char* str){
 
     for (int i=0; i<length(str); i++){
 
-        int util = c2i((char)str[length(str)-i-1]) * raise10(i);
+        int util = c2i((char)str[length(str)-i-1]) * (int)raise10(i);
         res += util;
     }
 
@@ -402,8 +411,8 @@ char* _i2s_positive(int n){
 
     int ll = length(n);
     char* res = malloc(n*sizeof(ll));
-    int track = ll -1;
 
+    int track = ll -1;
     while(ll--){
 
         res[track--] = i2c(n%10);
