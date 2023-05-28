@@ -28,8 +28,9 @@ int length(const char* ss){
 
 #define assert(x)                   if (!(x)) {fprintf(stderr, "[ERROR] Assertion Failed => Line %d in `%s()` in File `%s`"     \
                                                 , __LINE__, __FUNC__, __FILE__); exit(1);}                                      \
+
 #define asserts(x, msg)             if (!(x)) {fprintf(stderr, "%s", msg); exit(1);}                                            \
-                                                
+
 #define println(fmt, ...)           printf(fmt"\n", ##__VA_ARGS__)
 #define fprintln(stream, fmt, ...)  fprintf(stream, fmt"\n", ##__VA_ARGS__)
 
