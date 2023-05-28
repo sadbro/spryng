@@ -4,7 +4,7 @@
 #ifndef SPRYNG_H
 #define SPRYNG_H
 
-int length_i(const int a){
+int length_i(int a){
 
     int count = 1;
     while (a / 10){
@@ -39,8 +39,6 @@ int length(const char* ss){
                                             const char*     : length,       \
                                             int             : length_i,     \
                                             double          : length_i      \
-                                            const int       : length_i,     \
-                                            const double    : length_i      \
                                             )(x)
 
 #define in(ss, sbss)                counts(ss, sbss) > 0
