@@ -1,8 +1,7 @@
 
 # SPRYNG
 
-A python-like SAFE implementation for strings(in this case, char array) in C.
-the functions are named and implemented according to python3 convention.
+A SAFE implementation for manipulating strings(in this case, char array) in C.
 
 ## How To
 
