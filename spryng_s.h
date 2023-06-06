@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <alloca.h>
 
-int length_prototype(const char string[]){int count = 0;while( string[count++] != '\0' ){}return --count;}
+int length_prototype(const char string[]){int count = 0;while( string[count++] != '\0' ){}return (--count);}
 int strip_prototype(char string[], char delimiter){int count = 0;while( string[count++] == delimiter ){}return --count;}
 
 #define length(x)  _Generic((x), char*:length_prototype, const char*: length_prototype)(x)
@@ -107,8 +107,8 @@ int char_in(char expect, char string[]){
 
 int substr_in(char expect[], char string[]){
 
-    char* kernel = (char*)malloc( length(expect) * sizeof(char*) );
-    if (length(expect) > length(string)) return -1;
+    if (length(expect) > length(string)) return 0;
+    char* kernel = (char*)malloc( (length(expect)+1) * sizeof(char) );
 
     for (int i=0; i<=(length(string) - length(expect)); i++){
 
@@ -205,9 +205,31 @@ char __GLOBAL_RESERVED_CHECK = -1;
 char __GLOBAL_RESERVED_REPLACE = -1;
 
 int __GET_CHECK(char self)          {assert( __GLOBAL_RESERVED_CHECK != -1 );return ( self == __GLOBAL_RESERVED_CHECK );}
-char __RET_REPLACE(char _)          {return __GLOBAL_RESERVED_REPLACE;}
+char __RET_REPLACE(char _)          {assert( _ != '\0' );return __GLOBAL_RESERVED_REPLACE;}
 void __SET_CHECK(char check)        {__GLOBAL_RESERVED_CHECK = check;}
 void __SET_REPLACE(char replace)    {__GLOBAL_RESERVED_REPLACE = replace;}
+
+#define NONE (char)127
+
+void __GLOBAL_RESERVED_RESOLVE(char string[]){
+
+    if (!in(NONE, string)){return;}
+
+    char* intermediate = (char*)malloc( (length(string)+1) * sizeof(char) );
+    substring(intermediate, string, 0, length(string));
+
+    int count = 0;
+    for (int i=0; i<length(string); i++){
+
+        if (intermediate[i] != NONE){
+
+            string[count++] = intermediate[i];
+        }
+    }
+
+    string[count] = '\0';
+    free(intermediate);
+}
 
 void MAP_APPLY(char string[], char(*map)(char), int(*istrue)(char), void(*run)(va_list), ...){
 
@@ -221,12 +243,14 @@ void MAP_APPLY(char string[], char(*map)(char), int(*istrue)(char), void(*run)(v
     }
 
     string[length(string)] = '\0';
+    __GLOBAL_RESERVED_RESOLVE(string);
     __SET_CHECK(-1);
     __SET_REPLACE(-1);
     va_end(argv);
 }
 
-void pass(va_list argv){}
+void PASS_STR(char _[], va_list __){(void)_;(void)__;}
+void pass(){}
 void check_replace_prototype(va_list argv){
 
     __SET_CHECK((char)va_arg(argv, int));
@@ -237,6 +261,7 @@ void check_replace_prototype(va_list argv){
 #define MAP_UPPER   swapcase,   islowercase,    pass
 #define MAP_LOWER   swapcase,   isuppercase,    pass
 #define MAP_REPLACE(check, replace) __RET_REPLACE,    __GET_CHECK,    check_replace_prototype, check, replace
+#define MAP_REMOVE(remove) MAP_REPLACE(remove, NONE)
 
 void splitfn_prototype(char string[], char delimiter, void(*function)(char*, va_list), ...){
 
@@ -261,13 +286,14 @@ void splitfn_prototype(char string[], char delimiter, void(*function)(char*, va_
 #define splitfn(string, dl, func, ...) {while(length(string) > 0){splitfn_prototype(string, dl, func, ##__VA_ARGS__);}}
 
 void printc(char string[], va_list argv){char arg=(char)va_arg(argv,int);printf("%s has %d '%c's in it\n", string, count(string, arg), arg);}
+void PRINTLN(char string[], va_list argv){(void)argv;printf("%s\n", string);}
 
-int DIGITS(int number){
+int DIGITS_INT(int number){
 
     assert( (number > INT_MIN) && (number <= INT_MAX) );
 
     if (number == 0) return 1;
-    else if (number < 0) return DIGITS(-number);
+    else if (number < 0) return DIGITS_INT(-number);
     else{
 
         int count = 1;
@@ -276,7 +302,38 @@ int DIGITS(int number){
     }
 }
 
+int DIGITS_LONG(long number){
+
+    assert( (number > LONG_MIN) && (number <= LONG_MAX) );
+
+    if (number == 0) return 1;
+    else if (number < 0) return DIGITS_LONG(-number);
+    else{
+
+        int count = 1;
+        while ((number/10) > 0){count++;number /= 10;}
+        return count;
+    }
+}
+
+int DIGITS_LLONG(long long number){
+
+    assert( (number > LLONG_MIN) && (number <= LLONG_MAX) );
+
+    if (number == 0) return 1;
+    else if (number < 0) return DIGITS_LLONG(-number);
+    else{
+
+        int count = 1;
+        while ((number/10) > 0){count++;number /= 10;}
+        return count;
+    }
+}
+
+#define DIGITS(x) _Generic((x), int: DIGITS_INT, float: DIGITS_INT, long: DIGITS_LONG, double: DIGITS_LONG, long long: DIGITS_LLONG, long double: DIGITS_LLONG)(x)
+
 #define __GLOBAL_RESERVED_INT_MAGNITUDE_LIMIT 11 // DIGITS(INT_MAX) + 1(overhead)
+#define __GLOBAL_RESERVED_LONG_MAGNITUDE_LIMIT 20 // DIGITS(LONG_MAX) + 1(overhead)
 
 void INT_TO_CHAR(char* cc, int number){
 
@@ -286,7 +343,25 @@ void INT_TO_CHAR(char* cc, int number){
 
 void i2cs_prototype(char string[], int number, char delimiter) {
 
-    int i = DIGITS(number);
+    int i = DIGITS_INT(number);
+    if (number == 0) {string[0] = '0';string[1] = '\0';}
+    if (number < 0) {
+
+        i++;
+        string[0] = '-';
+        number = -number;
+    }
+
+    string[i--] = delimiter;
+    while (number > 0){
+
+        INT_TO_CHAR(&string[i--], (number % 10));
+        number /= 10;
+    }
+}
+void l2cs_prototype(char string[], long number, char delimiter) {
+
+    int i = DIGITS_LONG(number);
     if (number == 0) {string[0] = '0';string[1] = '\0';}
     if (number < 0) {
 
@@ -303,20 +378,22 @@ void i2cs_prototype(char string[], int number, char delimiter) {
     }
 }
 
-#define INT_TO_CHARS(string, number) i2cs_prototype(string, number, '\0')
+void INT_TO_CHARS(int number, char string[]) {i2cs_prototype(string, number, '\0');}
+void LONG_TO_CHARS(long number, char string[]) {l2cs_prototype(string, number, '\0');}
+
 #define FRACTION(number) (number - ((int)number))
 
-void FLOAT_TO_CHARS(char string[], float number) {
+void FLOAT_TO_CHARS(float number, char string[]) {
 
     if (FRACTION(number) == 0) {
 
-        INT_TO_CHARS(string, (int)number);
+        INT_TO_CHARS((int)number, string);
         return;
     }
 
     if (number < 0){
 
-        FLOAT_TO_CHARS(string, -number);
+        FLOAT_TO_CHARS(-number, string);
         concatfn("-", string, SAVE(string));
         return;
     }
@@ -332,4 +409,92 @@ void FLOAT_TO_CHARS(char string[], float number) {
     string[i] = '\0';
 }
 
-#endif // SPRYNG_SAFE_H
+#define CHARS(x, string) _Generic((x), int: INT_TO_CHARS, long: LONG_TO_CHARS, float: FLOAT_TO_CHARS, double: LONG_TO_CHARS)(x, string)
+
+int EVAL_INT(char string[]){
+
+    if (string[0] == '-'){
+
+        char* intermediate = (char*)alloca( length(string) * sizeof(char) );
+        substring(intermediate, string, 1, length(string));
+        return (0 - EVAL_INT(intermediate));
+    }
+
+    int result = 0;
+    for (int i=0; i<length(string); i++){
+
+        int power = 1;
+        for (int j=1; j<(length(string)-i); j++){
+
+            power *= 10;
+        }
+        result += ((string[i] - '0') * power);
+    }
+
+    return result;
+}
+
+double EVAL_DOUBLE(char string[]){
+
+    if (string[0] == '-'){
+
+        char* intermediate = (char*)alloca( length(string) * sizeof(char) );
+        substring(intermediate, string, 1, length(string));
+        return (0 - EVAL_DOUBLE(intermediate));
+    }
+
+    int dot = 0;
+    while (string[dot++] != '.'){}
+
+    char* integer_s = (char*)malloc( dot * sizeof(char) );
+    char* fraction_s = (char*)malloc( (length(string) - dot + 1 ) * sizeof(char) );
+
+    substring(integer_s, string, 0, dot-1);
+    substring(fraction_s, string, dot, length(string));
+
+    int integer = EVAL_INT(integer_s);
+    int fraction = EVAL_INT(fraction_s);
+
+    double integer_f = (double)integer;
+    double fraction_f = (double)fraction;
+
+    for (int i=0; i<length(fraction_s); i++){fraction_f /= 10;}
+
+    free(integer_s);
+    free(fraction_s);
+
+    return (integer_f + fraction_f);
+}
+
+#define EVAL(string) ((in('.', string) == 1) ? EVAL_DOUBLE(string) : EVAL_INT(string))
+
+int startswith(char prefix[], char string[]){
+
+    assert( length(prefix) <= length(string) );
+
+    for (int i=0; i<length(prefix); i++){
+
+        if (prefix[i] != string[i]){
+
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+int endswith(char suffix[], char string[]){
+
+    char* suffix_r = (char*)malloc( (length(suffix) +1) * sizeof(char) );
+    char* string_r = (char*)malloc( (length(string) +1) * sizeof(char) );
+
+    reverse(suffix_r, suffix);
+    reverse(string_r, string);
+
+    int result = startswith(suffix_r, string_r);
+
+    free(suffix_r);
+    free(string_r);
+
+    return result;
+}
